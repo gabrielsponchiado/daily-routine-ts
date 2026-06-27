@@ -1,8 +1,18 @@
 import axios from 'axios';
 
+function normalizeBaseUrl(url: string): string {
+  const trimmed = url.trim().replace(/\/$/, '');
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+    return trimmed;
+  }
+  return `https://${trimmed}`;
+}
+
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000',
-  });
+  baseURL: normalizeBaseUrl(
+    import.meta.env.VITE_API_URL || 'http://localhost:3000',
+  ),
+});
 
 export const tasks = {
   getAll: async () => {
@@ -22,5 +32,5 @@ export const tasks = {
 
   delete: async (id: number) => {
     await api.delete(`/tasks/${id}`);
-  }
+  },
 };

@@ -8,6 +8,7 @@ import { tasks } from "./api/tasks";
 export default function App() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
 
   const [text, setText] = useState("");
   const [filter, setFilter] = useState<FilterType>("all");
@@ -23,36 +24,43 @@ export default function App() {
         setLoading(false);
       }
     };
-  
+
     loadTodos();
   }, []);
 
-  if (loading) {
-    return <div className="min-h-screen flex items-center justify-center">Carregando tarefas...</div>;
-  }
-
   async function addTodo() {
-    if (text.trim() === "") return;
-  
+    const title = text.trim();
+    if (title === "" || submitting) return;
+
+    setSubmitting(true);
+
     try {
-      const newTodo = await tasks.create(text);
-      setTodos([...todos, newTodo]);
+      const newTodo = await tasks.create(title);
+      setTodos((prev) => [...prev, newTodo]);
       setText("");
     } catch (error) {
       console.error("Erro ao adicionar tarefa:", error);
+    } finally {
+      setSubmitting(false);
     }
   }
 
   async function toggleTodo(id: number) {
+    let currentDone: boolean | null = null;
+
+    setTodos((prev) => {
+      const todo = prev.find((t) => t.id === id);
+      if (todo) currentDone = todo.done;
+      return prev;
+    });
+
+    if (currentDone === null) return;
+
     try {
-      const todoAtual = todos.find(t => t.id === id);
-      if (!todoAtual) return;
-  
-      const updatedTodo = await tasks.update(id, !todoAtual.done);
-      
-      setTodos(todos.map(t => 
-        t.id === id ? updatedTodo : t
-      ));
+      const updatedTodo = await tasks.update(id, !currentDone);
+      setTodos((prev) =>
+        prev.map((t) => (t.id === id ? updatedTodo : t)),
+      );
     } catch (error) {
       console.error("Erro ao atualizar tarefa:", error);
     }
@@ -61,7 +69,7 @@ export default function App() {
   async function deleteTodo(id: number) {
     try {
       await tasks.delete(id);
-      setTodos(todos.filter(t => t.id !== id));
+      setTodos((prev) => prev.filter((t) => t.id !== id));
     } catch (error) {
       console.error("Erro ao deletar tarefa:", error);
     }
@@ -75,7 +83,14 @@ export default function App() {
 
   const total = todos.length;
   const done = todos.filter((t) => t.done).length;
-  
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-zinc-500">
+        Carregando tarefas...
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-zinc-50 flex flex-col items-center p-10 font-sans">
@@ -89,7 +104,12 @@ export default function App() {
             : `${done} of ${total} completed today`}
         </p>
 
-        <TodoInput text={text} setText={setText} onAdd={addTodo} />
+        <TodoInput
+          text={text}
+          setText={setText}
+          onAdd={addTodo}
+          disabled={submitting}
+        />
       </div>
 
       <div>
@@ -97,14 +117,22 @@ export default function App() {
       </div>
 
       <ul className="w-full max-w-md mt-8 flex flex-col gap-3">
-        {filteredTodos.map((todo) => (
-          <TodoItem
-            key={todo.id}
-            todo={todo}
-            onToggle={toggleTodo}
-            onDelete={deleteTodo}
-          />
-        ))}
+        {filteredTodos.length === 0 ? (
+          <li className="text-center text-zinc-400 text-sm py-6">
+            {total === 0
+              ? "Nenhuma tarefa ainda."
+              : "Nenhuma tarefa neste filtro."}
+          </li>
+        ) : (
+          filteredTodos.map((todo) => (
+            <TodoItem
+              key={todo.id}
+              todo={todo}
+              onToggle={toggleTodo}
+              onDelete={deleteTodo}
+            />
+          ))
+        )}
       </ul>
     </div>
   );
