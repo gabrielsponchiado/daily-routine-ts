@@ -27,6 +27,10 @@ export default function App() {
     loadTodos();
   }, []);
 
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center">Carregando tarefas...</div>;
+  }
+
   async function addTodo() {
     if (text.trim() === "") return;
   
