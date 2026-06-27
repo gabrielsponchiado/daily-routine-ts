@@ -46,23 +46,21 @@ export default function App() {
   }
 
   async function toggleTodo(id: number) {
-    let currentDone: boolean | null = null;
-
-    setTodos((prev) => {
-      const todo = prev.find((t) => t.id === id);
-      if (todo) currentDone = todo.done;
-      return prev;
-    });
-
-    if (currentDone === null) return;
-
     try {
-      const updatedTodo = await tasks.update(id, !currentDone);
-      setTodos((prev) =>
-        prev.map((t) => (t.id === id ? updatedTodo : t)),
+      const todoAtual = todos.find(t => t.id === id);
+      if (!todoAtual) return;
+  
+      const novoEstado = !todoAtual.done;
+  
+      setTodos(prevTodos => 
+        prevTodos.map(todo => 
+          todo.id === id ? { ...todo, done: novoEstado } : todo
+        )
       );
+
+      await tasks.update(id, novoEstado);
     } catch (error) {
-      console.error("Erro ao atualizar tarefa:", error);
+      console.error("Erro ao atualizar:", error);
     }
   }
 
@@ -86,54 +84,58 @@ export default function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-zinc-500">
-        Carregando tarefas...
+      <div className="min-h-screen bg-[#fafafa] flex items-center justify-center text-zinc-400 font-medium text-sm">
+        Loading...
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50 flex flex-col items-center p-10 font-sans">
-      <div className="w-full max-w-md bg-white p-6 rounded-xl shadow-md border border-zinc-200">
-        <h1 className="text-3xl font-black text-zinc-800 text-center">
-          Daily Routine
-        </h1>
-        <p className="text-zinc-500 text-sm text-center mb-6">
-          {total === 0
-            ? "Add your goals"
-            : `${done} of ${total} completed today`}
-        </p>
-
-        <TodoInput
-          text={text}
-          setText={setText}
-          onAdd={addTodo}
-          disabled={submitting}
-        />
-      </div>
-
-      <div>
-        <Filter filter={filter} onChange={setFilter} />
-      </div>
-
-      <ul className="w-full max-w-md mt-8 flex flex-col gap-3">
-        {filteredTodos.length === 0 ? (
-          <li className="text-center text-zinc-400 text-sm py-6">
+    <div className="min-h-screen bg-[#fafafa] flex flex-col items-center p-8 md:p-16 font-sans">
+      <div className="w-full max-w-md">
+        <div className="mb-8 text-center">
+          <h1 className="text-3xl font-bold tracking-tight text-zinc-900 mb-2">
+            Daily Routine
+          </h1>
+          <p className="text-zinc-500 text-sm font-medium">
             {total === 0
-              ? "Nenhuma tarefa ainda."
-              : "Nenhuma tarefa neste filtro."}
-          </li>
-        ) : (
-          filteredTodos.map((todo) => (
-            <TodoItem
-              key={todo.id}
-              todo={todo}
-              onToggle={toggleTodo}
-              onDelete={deleteTodo}
-            />
-          ))
-        )}
-      </ul>
+              ? "What's on your mind today?"
+              : `${done} of ${total} completed`}
+          </p>
+        </div>
+
+        <div className="bg-white p-1.5 rounded-2xl shadow-sm border border-zinc-200/60 mb-8 focus-within:border-zinc-300 focus-within:ring-4 focus-within:ring-zinc-100 transition-all">
+          <TodoInput
+            text={text}
+            setText={setText}
+            onAdd={addTodo}
+            disabled={submitting}
+          />
+        </div>
+
+        <div className="flex justify-center mb-6">
+          <Filter filter={filter} onChange={setFilter} />
+        </div>
+
+        <ul className="flex flex-col gap-3">
+          {filteredTodos.length === 0 ? (
+            <li className="text-center text-zinc-400 text-sm py-8">
+              {total === 0
+                ? "No tasks yet."
+                : "No tasks found."}
+            </li>
+          ) : (
+            filteredTodos.map((todo) => (
+              <TodoItem
+                key={todo.id}
+                todo={todo}
+                onToggle={toggleTodo}
+                onDelete={deleteTodo}
+              />
+            ))
+          )}
+        </ul>
+      </div>
     </div>
   );
 }
