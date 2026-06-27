@@ -13,14 +13,14 @@ export function TodoItem({ todo, onToggle, onDelete }: TodoItemProps) {
       <div className="flex items-center gap-3">
         <input
           type="checkbox"
-          checked={todo.concluida}
+          checked={todo.done}                    
           onChange={() => onToggle(todo.id)}
           className="w-5 h-5 cursor-pointer accent-blue-600"
         />
         <span
-          className={`font-medium transition-all ${todo.concluida ? "line-through text-zinc-300" : ""}`}
+          className={`font-medium transition-all ${todo.done ? "line-through text-zinc-300" : ""}`}  
         >
-          {todo.texto}
+          {todo.title}                          
         </span>
       </div>
       <button
