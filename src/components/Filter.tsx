@@ -6,15 +6,27 @@ interface FilterProps {
 }
 
 export function Filter({ filter, onChange }: FilterProps) {
+  const options: { value: FilterType; label: string }[] = [
+    { value: "all", label: "All" },
+    { value: "completed", label: "Done" },
+    { value: "uncompleted", label: "Pending" },
+  ];
+
   return (
-    <select
-      value={filter}
-      onChange={(e) => onChange(e.target.value as FilterType)}
-      className="w-full mt-5 px-3 py-2 rounded-lg border border-zinc-300 bg-white text-sm text-zinc-700 font-medium outline-none transition focus:border-zinc-400 focus:ring-2 focus:ring-zinc-200 hover:border-zinc-400 cursor-pointer"
-    >
-      <option value="all">All</option>
-      <option value="completed">Completed</option>
-      <option value="uncompleted">Uncompleted</option>
-    </select>
+    <div className="flex p-1 bg-zinc-100/80 rounded-xl gap-1">
+      {options.map((opt) => (
+        <button
+          key={opt.value}
+          onClick={() => onChange(opt.value)}
+          className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${
+            filter === opt.value
+              ? "bg-white text-zinc-900 shadow-sm"
+              : "text-zinc-500 hover:text-zinc-700"
+          }`}
+        >
+          {opt.label}
+        </button>
+      ))}
+    </div>
   );
 }
